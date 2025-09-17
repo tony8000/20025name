@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易计算器</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        .calculator {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 320px;
+        }
+        
+        .display {
+            background-color: #444;
+            color: white;
+            font-size: 36px;
+            text-align: right;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            min-height: 45px;
+            overflow: hidden;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .btn {
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: #666;
+        }
+        
+        .btn:active {
+            background-color: #777;
+        }
+        
+        .operator {
+            background-color: #ff9500;
+        }
+        
+        .operator:hover {
+            background-color: #ffa726;
+        }
+        
+        .operator:active {
+            background-color: #ffb74d;
+        }
+        
+        .clear {
+            background-color: #ff3b30;
+        }
+        
+        .clear:hover {
+            background-color: #ff5252;
+        }
+        
+        .clear:active {
+            background-color: #ff6e6e;
+        }
+        
+        .equal {
+            background-color: #007aff;
+        }
+        
+        .equal:hover {
+            background-color: #2979ff;
+        }
+        
+        .equal:active {
+            background-color: #448aff;
+        }
+        
+        .zero {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="btn clear" onclick="clearDisplay()">C</button>
+            <button class="btn" onclick="appendToDisplay('%')">%</button>
+            <button class="btn" onclick="appendToDisplay('±')">±</button>
+            <button class="btn operator" onclick="setOperation('/')">÷</button>
+            
+            <button class="btn" onclick="appendToDisplay('7')">7</button>
+            <button class="btn" onclick="appendToDisplay('8')">8</button>
+            <button class="btn" onclick="appendToDisplay('9')">9</button>
+            <button class="btn operator" onclick="setOperation('*')">×</button>
+            
+            <button class="btn" onclick="appendToDisplay('4')">4</button>
+            <button class="btn" onclick="appendToDisplay('5')">5</button>
+            <button class="btn" onclick="appendToDisplay('6')">6</button>
+            <button class="btn operator" onclick="setOperation('-')">−</button>
+            
+            <button class="btn" onclick="appendToDisplay('1')">1</button>
+            <button class="btn" onclick="appendToDisplay('2')">2</button>
+            <button class="btn" onclick="appendToDisplay('3')">3</button>
+            <button class="btn operator" onclick="setOperation('+')">+</button>
+            
+            <button class="btn zero" onclick="appendToDisplay('0')">0</button>
+            <button class="btn" onclick="appendToDisplay('.')">.</button>
+            <button class="btn equal" onclick="calculate()">=</button>
+        </div>
+    </div>
+    
+    <script>
+        let firstOperand = '';
+        let operator = null;
+        let secondOperand = '';
+        let shouldResetScreen = false;
+        
+        const display = document.getElementById('display');
+        
+        function appendToDisplay(value) {
+            if (display.textContent === '0' || shouldResetScreen) {
+                display.textContent = '';
+                shouldResetScreen = false;
+            }
+            
+            // 处理小数点不能重复添加
+            if (value === '.' && display.textContent.includes('.')) {
+                return;
+            }
+            
+            // 处理正负号
+            if (value === '±') {
+                display.textContent = display.textContent.startsWith('-') 
+                    ? display.textContent.slice(1) 
+                    : '-' + display.textContent;
+                return;
+            }
+            
+            // 处理百分比
+            if (value === '%') {
+                try {
+                    display.textContent = (parseFloat(display.textContent) / 100).toString();
+                } catch (error) {
+                    display.textContent = '错误';
+                }
+                return;
+            }
+            
+            // 限制显示长度
+            if (display.textContent.length > 12) {
+                return;
+            }
+            
+            display.textContent += value;
+        }
+        
+        function setOperation(nextOperator) {
+            if (operator !== null) {
+                calculate();
+            }
+            
+            firstOperand = display.textContent;
+            operator = nextOperator;
+            shouldResetScreen = true;
+        }
+        
+        function calculate() {
+            if (operator === null || shouldResetScreen) {
+                return;
+            }
+            
+            secondOperand = display.textContent;
+            
+            try {
+                let result;
+                const num1 = parseFloat(firstOperand);
+                const num2 = parseFloat(secondOperand);
+                
+                if (isNaN(num1) || isNaN(num2)) {
+                    display.textContent = '错误';
+                    return;
+                }
+                
+                switch (operator) {
+                    case '+':
+                        result = num1 + num2;
+                        break;
+                    case '-':
+                        result = num1 - num2;
+                        break;
+                    case '*':
+                        result = num1 * num2;
+                        break;
+                    case '/':
+                        if (num2 === 0) {
+                            display.textContent = '除以零';
+                            return;
+                        }
+                        result = num1 / num2;
+                        break;
+                    default:
+                        return;
+                }
+                
+                // 处理结果显示，避免过多的小数位
+                if (Number.isInteger(result)) {
+                    display.textContent = result.toString();
+                } else {
+                    display.textContent = result.toFixed(8).replace(/\.?0+$/, '');
+                }
+                
+                operator = null;
+                firstOperand = display.textContent;
+            } catch (error) {
+                display.textContent = '错误';
+            }
+            
+            shouldResetScreen = true;
+        }
+        
+        function clearDisplay() {
+            display.textContent = '0';
+            firstOperand = '';
+            operator = null;
+            secondOperand = '';
+            shouldResetScreen = false;
+        }
+        
+        // 添加键盘支持
+        document.addEventListener('keydown', (event) => {
+            const key = event.key;
+            
+            if (key >= '0' && key <= '9') {
+                event.preventDefault();
+                appendToDisplay(key);
+            } else if (key === '.') {
+                event.preventDefault();
+                appendToDisplay('.');
+            } else if (key === '+' || key === '-') {
+                event.preventDefault();
+                setOperation(key);
+            } else if (key === '*' || key === 'x' || key === 'X') {
+                event.preventDefault();
+                setOperation('*');
+            } else if (key === '/' || key === '÷') {
+                event.preventDefault();
+                setOperation('/');
+            } else if (key === '=' || key === 'Enter') {
+                event.preventDefault();
+                calculate();
+            } else if (key === 'Escape' || key === 'c' || key === 'C') {
+                event.preventDefault();
+                clearDisplay();
+            } else if (key === 'Backspace') {
+                event.preventDefault();
+                if (display.textContent !== '0') {
+                    display.textContent = display.textContent.slice(0, -1);
+                    if (display.textContent === '') {
+                        display.textContent = '0';
+                    }
+                }
+            }
+        });
+        
+        // 窗口拖动功能
+        const calculator = document.querySelector('.calculator');
+        let isDragging = false;
+        let offsetX, offsetY;
+        
+        calculator.addEventListener('mousedown', (e) => {
+            if (e.target === calculator || e.target === display) {
+                isDragging = true;
+                offsetX = e.clientX - calculator.getBoundingClientRect().left;
+                offsetY = e.clientY - calculator.getBoundingClientRect().top;
+                calculator.style.cursor = 'grabbing';
+            }
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const newX = e.clientX - offsetX;
+            const newY = e.clientY - offsetY;
+            
+            calculator.style.position = 'fixed';
+            calculator.style.left = newX + 'px';
+            calculator.style.top = newY + 'px';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            calculator.style.cursor = 'default';
+        });
+    </script>
+</body>
+</html>
